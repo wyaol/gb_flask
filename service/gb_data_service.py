@@ -25,6 +25,14 @@ def _get_table_struct(path, head_line=None):
     res = []
     history = []
 
+    #计算每列的长度
+    col_word_count_max = [0] * col_num
+    for i in range(col_num):
+        for j in range(row_num):
+            value = table.cell(j, i).value
+            count = len(str(value)) // 2 if type(value) is float else len(value)
+            col_word_count_max[i] = col_word_count_max[i] if count < col_word_count_max[i] else count
+
     if head_line is None: head_line = row_num
 
     for i in range(head_line):
@@ -35,6 +43,7 @@ def _get_table_struct(path, head_line=None):
                 continue
             item = {'title': value}
 
+            item['width'] = col_word_count_max[j] * 20 + 20
             # 便利以自身为左上角起点的矩形区域占几个单元格
             for ii in range(i + 1, row_num):
                 if table.cell(ii, j).value == '' and (ii, j) not in history:
@@ -76,7 +85,8 @@ def _get_table_cont(path, head_line=None):
     for cols in res_array:
         row = {}
         for i in range(len(cols)):
-            row[str(i)] = cols[i]
+            value = cols[i]
+            row[str(i)] = value if type(value) is not float else round(value, 3)
         res.append(row)
     return res
 
@@ -85,7 +95,7 @@ def get_size_weight_table_head(path):
 
 
 def get_size_weight_table_cont(path, limit, page):
-    res = _get_table_cont(_get_file_path_by_keyword(path, '尺寸'))
+    res = _get_table_cont(_get_file_path_by_keyword(path, '尺寸'), 2)
     count = len(res)
     cur = (page - 1) * limit
     res = res[cur: (cur + limit)]

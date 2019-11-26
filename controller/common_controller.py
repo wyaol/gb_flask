@@ -54,16 +54,22 @@ def tree():
 
 @common.route('/pro/get_pro_list', methods=['POST'])
 def get_pro_list():
-    id = request.form['id']
-    page = request.form['page']
-    limit = request.form['limit']
-    data, count = gb_data_service.get_pro_list(id, int(page), int(limit))
-    return json.dumps({
+    response = {
         'code': SUCCESS_CODE,
         'msg': '',
-        'count': count,
-        'data': data
-    }, ensure_ascii=True)
+        'data': []
+    }
+    try:
+        id = request.form['id']
+        page = request.form['page']
+        limit = request.form['limit']
+        data, count = gb_data_service.get_pro_list(id, int(page), int(limit))
+        response['data'] = data
+        response['count'] = count
+    except KeyError:
+        pass
+    finally:
+        return json.dumps(response, ensure_ascii=True)
 
 
 @common.route('/pro/technology_quote', methods=['POST'])
