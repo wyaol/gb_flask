@@ -91,11 +91,19 @@ def _get_table_cont(path, head_line=None):
     return res
 
 def get_size_weight_table_head(path):
-    return _get_table_struct(_get_file_path_by_keyword(path, '尺寸'), 2)
+    if '自攻螺钉' in path:
+        line = 3
+    else: line = 2
+
+    return _get_table_struct(_get_file_path_by_keyword(path, '尺寸'), line)
 
 
 def get_size_weight_table_cont(path, limit, page):
-    res = _get_table_cont(_get_file_path_by_keyword(path, '尺寸'), 2)
+    if '自攻螺钉' in path:
+        line = 3
+    else: line = 2
+
+    res = _get_table_cont(_get_file_path_by_keyword(path, '尺寸'), line)
     count = len(res)
     cur = (page - 1) * limit
     res = res[cur: (cur + limit)]
@@ -108,17 +116,31 @@ def get_tree():
     for i in range(len(dirs)):
         res.append({'pId': '111', 'id': dirs[i], 'name': dirs[i]})
 
-    data = [{'name': '全部', 'id': '全部', 'children': [{'name': '通用零部件', 'children': [{'name': '紧固件', 'children': res}]},
+    data = [{'name': '全部', 'children': [{'name': '通用零部件', 'children': [{'name': '紧固件', 'children': res}]},
                                         {'name': '轴承、齿轮、和传动部件'}]}]
 
     return data
 
-def get_pro_list(id, page, limit):
+def get_pro_list(id, page, limit, key):
     """
     获取标准列表
     :param id: 标准大类名称
     :return:
     """
+    if id is None and key is None:
+        res = _get_pro_list_by_key('')
+    elif key is not None and id is None:
+        res = _get_pro_list_by_key(key)
+    elif key is not None and id is not None:
+        res = _get_pro_list_by_key_id(key, id)
+    else:
+        res = _get_pro_list_by_id(id)
+    count = len(res)
+    cur = (page - 1) * limit
+    res = res[cur : (cur + limit)]
+    return res, count
+
+def _get_pro_list_by_id(id):
     res = []
     dir_parent = '中机数据/%s/' % id
     dirs = os.listdir(dir_parent)
@@ -130,10 +152,37 @@ def get_pro_list(id, page, limit):
             'drawing': '2',
             'path': '%s%s/' % (dir_parent, dir)
         })
-    count = len(res)
-    cur = (page - 1) * limit
-    res = res[cur : (cur + limit)]
-    return res, count
+    return res
+
+def _get_pro_list_by_key(key):
+    res = []
+    dir_parent = '中机数据'
+    dirss = os.listdir(dir_parent)
+    for dirs in dirss:
+        dir_next = os.listdir('%s/%s/' % (dir_parent, dirs))
+        for dir in dir_next:
+            if key not in dir: continue
+            res.append({
+                'name': dir,
+                'thumb': '1',
+                'drawing': '2',
+                'path': '%s/%s/%s/' % (dir_parent, dirs, dir)
+            })
+    return res
+
+def _get_pro_list_by_key_id(key, id):
+    res = []
+    dir_parent = '中机数据'
+    dirs = os.listdir('%s/%s/' % (dir_parent, id))
+    for dir in dirs:
+        if key not in dir: continue
+        res.append({
+            'name': dir,
+            'thumb': '1',
+            'drawing': '2',
+            'path': '%s/%s/%s/' % (dir_parent, id, dir)
+            })
+    return res
 
 def get_technology_quote(path):
     return  _get_table_struct('%s%s' % (path, '技术条件和引用标准.xlsx'))

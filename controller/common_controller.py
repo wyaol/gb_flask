@@ -60,10 +60,12 @@ def get_pro_list():
         'data': []
     }
     try:
-        id = request.form['id']
-        page = request.form['page']
-        limit = request.form['limit']
-        data, count = gb_data_service.get_pro_list(id, int(page), int(limit))
+        args = request.form.to_dict()
+        id = args.get('id', None)
+        page = args.get('page', None)
+        limit = args.get('limit', None)
+        key = args.get('key', None)
+        data, count = gb_data_service.get_pro_list(id, int(page), int(limit), key)
         response['data'] = data
         response['count'] = count
     except KeyError:
