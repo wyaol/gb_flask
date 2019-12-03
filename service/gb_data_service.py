@@ -8,13 +8,43 @@ def _get_filename_by_partname(chooses, partname):
         if partname in choose: return choose
     return None
 
-
 def _get_file_path_by_keyword(path, keyword):
     files = os.listdir(path)
     choose = _get_filename_by_partname(files, keyword)
     if choose is None: raise FileNotFoundError()
     return '%s%s' % (path, choose)
 
+def __get_width(length):
+    """
+    根据该列的相对最多字节数计算该列的前端需要的长度
+    :param length: 该列最多的字节数
+    :return int: 该列的宽度 前端单位为px
+    """
+    res = 0
+    if length < 4: res = length * 20 + 20
+    elif length >= 4 and length < 8: res = 100 + (length - 4) * 10
+    else: res = 140 + (length - 8) * 7.5
+    return res
+
+def __get_table_head_line(table, row_num, col_num):
+    """
+    获取表格表头行数 以备注列所占的空间为标准
+    :param table: 表格对象
+    :param row_num: 行数
+    :param col_num: 列数
+    :return:
+    """
+    count = 1
+    for i in range(row_num):
+        for j in range(col_num):
+            if table.cell(i, j).value == '备注':
+                for k in range(i+1, row_num):
+                    if table.cell(k, j).value == '':
+                        count += 1
+                    else:
+                        return count
+                return count
+    return None
 
 def _get_table_struct(path, head_line=None):
     data = xlrd.open_workbook(path)
@@ -33,6 +63,8 @@ def _get_table_struct(path, head_line=None):
             count = len(str(value)) // 2 if type(value) is float else len(value)
             col_word_count_max[i] = col_word_count_max[i] if count < col_word_count_max[i] else count
 
+    if head_line is None:
+        head_line = __get_table_head_line(table, row_num, col_num)
     if head_line is None: head_line = row_num
 
     for i in range(head_line):
@@ -43,7 +75,7 @@ def _get_table_struct(path, head_line=None):
                 continue
             item = {'title': value}
 
-            item['width'] = col_word_count_max[j] * 20 + 20
+            item['width'] = __get_width(col_word_count_max[j])
             # 便利以自身为左上角起点的矩形区域占几个单元格
             for ii in range(i + 1, row_num):
                 if table.cell(ii, j).value == '' and (ii, j) not in history:
@@ -65,12 +97,14 @@ def _get_table_struct(path, head_line=None):
         res.append(row)
     return res
 
-def _get_table_data(path, head_line=None):
+def _get_table_data(path, head_line):
     data = xlrd.open_workbook(path)
     table = data.sheets()[0]
     row_num = table.nrows
     col_num = table.ncols
     res = []
+    if head_line is None:
+        head_line = __get_table_head_line(table, row_num, col_num)
     if head_line is None: head_line = 0
     for i in range(head_line, row_num):
         row = []
@@ -79,8 +113,8 @@ def _get_table_data(path, head_line=None):
         res.append(row)
     return res
 
-def _get_table_cont(path, head_line=None):
-    res_array = _get_table_data(path, head_line)
+def _get_table_cont(path, line=None):
+    res_array = _get_table_data(path, line)
     res = []
     for cols in res_array:
         row = {}
@@ -91,24 +125,14 @@ def _get_table_cont(path, head_line=None):
     return res
 
 def get_size_weight_table_head(path):
-    if '自攻螺钉' in path:
-        line = 3
-    else: line = 2
-
-    return _get_table_struct(_get_file_path_by_keyword(path, '尺寸'), line)
-
+    return _get_table_struct(_get_file_path_by_keyword(path, '尺寸'))
 
 def get_size_weight_table_cont(path, limit, page):
-    if '自攻螺钉' in path:
-        line = 3
-    else: line = 2
-
-    res = _get_table_cont(_get_file_path_by_keyword(path, '尺寸'), line)
+    res = _get_table_cont(_get_file_path_by_keyword(path, '尺寸'))
     count = len(res)
     cur = (page - 1) * limit
     res = res[cur: (cur + limit)]
     return res, count
-
 
 def get_tree():
     res = []
