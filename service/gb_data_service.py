@@ -154,11 +154,11 @@ def get_tree():
         dirs = os.listdir('中机数据/%s/' % (dir_n))
         res[dir_n] = []
         for i in range(len(dirs)):
-            res[dir_n].append({'id': '%s/%s' % (dir_n ,dirs[i]), 'name': dirs[i]})
+            res[dir_n].append({'id': '%s/%s' % (dir_n, dirs[i]), 'name': dirs[i]})
 
-    data = [{'name': '全部', 'children': [{'name': '紧固件', 'children': res['紧固件']}, {'name': '轴承', 'children': res['轴承']},
-                                        {'name': '联轴器', 'children': []}, {'name': '弹簧', 'children': res['弹簧']},
-                                        {'name': '齿轮', 'children': []}, {'name': '液压件', 'children': []}, ]}]
+    data = [{'name': '紧固件', 'id': '紧固件', 'children': res['紧固件']}, {'name': '轴承', 'id': '轴承', 'children': res['轴承']},
+            {'name': '联轴器', 'id': '联轴器', 'children': res['联轴器']}, {'name': '弹簧', 'id': '弹簧', 'children': res['弹簧']},
+            {'name': '齿轮', 'id': '齿轮', 'children': []}, {'name': '液压件', 'id': '液压件', 'children': []}, ]
 
     return data
 
@@ -169,18 +169,37 @@ def get_pro_list(id, page, limit, key):
     :param id: 标准大类名称
     :return:
     """
-    if id is None and key is None:
-        res = _get_pro_list_by_key('')
-    elif key is not None and id is None:
-        res = _get_pro_list_by_key(key)
-    elif key is not None and id is not None:
-        res = _get_pro_list_by_key_id(key, id)
+    if key is None:
+        if  '/' in id:
+            res = _get_pro_list_by_id(id)
+        else:
+            res = _get_pro_list_by_p_id(id)
     else:
-        res = _get_pro_list_by_id(id)
+        if '/' in id:
+            res = _get_pro_list_by_key_id(key, id)
+        else:
+            res = _get_pro_list_by_key_p_id(key, id)
     count = len(res)
     cur = (page - 1) * limit
     res = res[cur: (cur + limit)]
     return res, count
+
+
+def _get_pro_list_by_p_id(id):
+    res = []
+    dir_parent = '中机数据/%s/' % id
+    dirs = os.listdir(dir_parent)
+
+    for p_dir in dirs:
+        c_dis = os.listdir('中机数据/%s/%s' % (id, p_dir) )
+        for dir in c_dis:
+            res.append({
+                'name': dir,
+                'thumb': '1',
+                'drawing': '2',
+                'path': '%s%s/%s/' % (dir_parent, p_dir, dir)
+            })
+    return res
 
 
 def _get_pro_list_by_id(id):
@@ -198,23 +217,6 @@ def _get_pro_list_by_id(id):
     return res
 
 
-def _get_pro_list_by_key(key):
-    res = []
-    dir_parent = '中机数据/紧固件'
-    dirss = os.listdir(dir_parent)
-    for dirs in dirss:
-        dir_next = os.listdir('%s/%s/' % (dir_parent, dirs))
-        for dir in dir_next:
-            if key not in dir: continue
-            res.append({
-                'name': dir,
-                'thumb': '1',
-                'drawing': '2',
-                'path': '%s/%s/%s/' % (dir_parent, dirs, dir)
-            })
-    return res
-
-
 def _get_pro_list_by_key_id(key, id):
     res = []
     dir_parent = '中机数据'
@@ -227,6 +229,23 @@ def _get_pro_list_by_key_id(key, id):
             'drawing': '2',
             'path': '%s/%s/%s/' % (dir_parent, id, dir)
         })
+    return res
+
+
+def _get_pro_list_by_key_p_id(key, id):
+    res = []
+    dir_parent = '中机数据'
+    dirs = os.listdir('%s/%s/' % (dir_parent, id))
+    for e in dirs:
+        c_dirs = os.listdir('%s/%s/%s' % (dir_parent, id, e))
+        for dir in c_dirs:
+            if key not in dir: continue
+            res.append({
+                'name': dir,
+                'thumb': '1',
+                'drawing': '2',
+                'path': '%s/%s/%s/%s/' % (dir_parent, id, e, dir)
+            })
     return res
 
 
