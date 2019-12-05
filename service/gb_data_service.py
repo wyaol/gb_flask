@@ -8,11 +8,13 @@ def _get_filename_by_partname(chooses, partname):
         if partname in choose: return choose
     return None
 
+
 def _get_file_path_by_keyword(path, keyword):
     files = os.listdir(path)
     choose = _get_filename_by_partname(files, keyword)
     if choose is None: raise FileNotFoundError()
     return '%s%s' % (path, choose)
+
 
 def __get_width(length):
     """
@@ -21,10 +23,14 @@ def __get_width(length):
     :return int: 该列的宽度 前端单位为px
     """
     res = 0
-    if length < 4: res = length * 20 + 20
-    elif length >= 4 and length < 8: res = 100 + (length - 4) * 10
-    else: res = 140 + (length - 8) * 7.5
+    if length < 4:
+        res = length * 20 + 20
+    elif length >= 4 and length < 8:
+        res = 100 + (length - 4) * 10
+    else:
+        res = 140 + (length - 8) * 7.5
     return res
+
 
 def __get_table_head_line(table, row_num, col_num):
     """
@@ -38,13 +44,14 @@ def __get_table_head_line(table, row_num, col_num):
     for i in range(row_num):
         for j in range(col_num):
             if table.cell(i, j).value == '备注':
-                for k in range(i+1, row_num):
+                for k in range(i + 1, row_num):
                     if table.cell(k, j).value == '':
                         count += 1
                     else:
                         return count
                 return count
     return None
+
 
 def _get_table_struct(path, head_line=None):
     data = xlrd.open_workbook(path)
@@ -55,7 +62,7 @@ def _get_table_struct(path, head_line=None):
     res = []
     history = []
 
-    #计算每列的长度
+    # 计算每列的长度
     col_word_count_max = [0] * col_num
     for i in range(col_num):
         for j in range(row_num):
@@ -97,6 +104,7 @@ def _get_table_struct(path, head_line=None):
         res.append(row)
     return res
 
+
 def _get_table_data(path, head_line):
     data = xlrd.open_workbook(path)
     table = data.sheets()[0]
@@ -113,6 +121,7 @@ def _get_table_data(path, head_line):
         res.append(row)
     return res
 
+
 def _get_table_cont(path, line=None):
     res_array = _get_table_data(path, line)
     res = []
@@ -124,8 +133,10 @@ def _get_table_cont(path, line=None):
         res.append(row)
     return res
 
+
 def get_size_weight_table_head(path):
     return _get_table_struct(_get_file_path_by_keyword(path, '尺寸'))
+
 
 def get_size_weight_table_cont(path, limit, page):
     res = _get_table_cont(_get_file_path_by_keyword(path, '尺寸'))
@@ -134,16 +145,23 @@ def get_size_weight_table_cont(path, limit, page):
     res = res[cur: (cur + limit)]
     return res, count
 
-def get_tree():
-    res = []
-    dirs = os.listdir('中机数据/')
-    for i in range(len(dirs)):
-        res.append({'pId': '111', 'id': dirs[i], 'name': dirs[i]})
 
-    data = [{'name': '全部', 'children': [{'name': '通用零部件', 'children': [{'name': '紧固件', 'children': res}]},
-                                        {'name': '轴承、齿轮、和传动部件'}]}]
+def get_tree():
+    # fasteners = []
+    res = {}
+    p_dirs = os.listdir('中机数据/')
+    for dir_n in p_dirs:
+        dirs = os.listdir('中机数据/%s/' % (dir_n))
+        res[dir_n] = []
+        for i in range(len(dirs)):
+            res[dir_n].append({'id': '%s/%s' % (dir_n ,dirs[i]), 'name': dirs[i]})
+
+    data = [{'name': '全部', 'children': [{'name': '紧固件', 'children': res['紧固件']}, {'name': '轴承', 'children': res['轴承']},
+                                        {'name': '联轴器', 'children': []}, {'name': '弹簧', 'children': res['弹簧']},
+                                        {'name': '齿轮', 'children': []}, {'name': '液压件', 'children': []}, ]}]
 
     return data
+
 
 def get_pro_list(id, page, limit, key):
     """
@@ -161,8 +179,9 @@ def get_pro_list(id, page, limit, key):
         res = _get_pro_list_by_id(id)
     count = len(res)
     cur = (page - 1) * limit
-    res = res[cur : (cur + limit)]
+    res = res[cur: (cur + limit)]
     return res, count
+
 
 def _get_pro_list_by_id(id):
     res = []
@@ -178,9 +197,10 @@ def _get_pro_list_by_id(id):
         })
     return res
 
+
 def _get_pro_list_by_key(key):
     res = []
-    dir_parent = '中机数据'
+    dir_parent = '中机数据/紧固件'
     dirss = os.listdir(dir_parent)
     for dirs in dirss:
         dir_next = os.listdir('%s/%s/' % (dir_parent, dirs))
@@ -194,6 +214,7 @@ def _get_pro_list_by_key(key):
             })
     return res
 
+
 def _get_pro_list_by_key_id(key, id):
     res = []
     dir_parent = '中机数据'
@@ -205,25 +226,30 @@ def _get_pro_list_by_key_id(key, id):
             'thumb': '1',
             'drawing': '2',
             'path': '%s/%s/%s/' % (dir_parent, id, dir)
-            })
+        })
     return res
+
 
 def get_technology_quote(path):
-    return  _get_table_struct('%s%s' % (path, '技术条件和引用标准.xlsx'))
+    return _get_table_struct('%s%s' % (path, '技术条件和引用标准.xlsx'))
+
 
 def get_equivalent_head(path):
-    res = _get_table_struct(_get_file_path_by_keyword(path, '近似'), 1)
+    res = _get_table_struct(_get_file_path_by_keyword(path, '近似'), 2)
     return res
 
+
 def get_equivalent_cont(path, limit, page):
-    res = _get_table_cont(_get_file_path_by_keyword(path, '近似'), 1)
+    res = _get_table_cont(_get_file_path_by_keyword(path, '近似'), 2)
     count = len(res)
     cur = (page - 1) * limit
     res = res[cur: (cur + limit)]
     return res, count
 
+
 def get_history_head(path):
-    return  _get_table_struct('%s%s' % (path, '历史标准.xlsx'), 1)
+    return _get_table_struct('%s%s' % (path, '历年标准.xlsx'), 1)
+
 
 def get_history_cont(path):
-    return _get_table_cont('%s%s' % (path, '历史标准.xlsx'), 1)
+    return _get_table_cont('%s%s' % (path, '历年标准.xlsx'), 1)
