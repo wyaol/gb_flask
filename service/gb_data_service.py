@@ -1,7 +1,7 @@
 import os
 import datetime
 import xlrd
-from utils.common_utils import dict_add
+from utils.common_utils import dict_add, sort_by_dict
 
 
 def _get_filename_by_partname(chooses, partname):
@@ -26,7 +26,7 @@ def __get_width(length):
     res = 0
     if length < 4:
         res = length * 20 + 20
-    elif length >= 4 and length < 8:
+    elif 4 <= length < 8:
         res = 100 + (length - 4) * 10
     else:
         res = 140 + (length - 8) * 7.5
@@ -159,10 +159,39 @@ def get_tree():
     res = {}
     p_dirs = os.listdir('中机数据/')
     for dir_n in p_dirs:
-        dirs = os.listdir('中机数据/%s/' % (dir_n))
+        dirs = os.listdir('中机数据/%s/' % dir_n)
         res[dir_n] = []
         for i in range(len(dirs)):
             res[dir_n].append({'id': '%s/%s' % (dir_n, dirs[i]), 'name': dirs[i]})
+
+    sort_by_dict(res['紧固件'], {
+        '螺栓': 0,
+        '螺柱': 1,
+        '螺母': 2,
+        '螺钉': 3,
+        '木螺钉': 4,
+        '自攻螺钉': 5,
+        '垫圈': 6,
+        '销': 7,
+        '铆钉': 8,
+        '挡圈': 9,
+        '紧固件-组合件和连接副': 10,
+        '焊钉': 11,
+    }, 'name')
+    # sort_by_dict(res['紧固件'], {
+    #     '螺栓': 0,
+    #     '螺柱': 1,
+    #     '螺母': 2,
+    #     '螺钉': 3,
+    #     '木螺钉': 4,
+    #     '自攻螺钉': 5,
+    #     '垫圈': 6,
+    #     '销': 7,
+    #     '铆钉': 8,
+    #     '挡圈': 9,
+    #     '紧固件-组合件和连接副': 10,
+    #     '焊钉': 11,
+    # }, 'name')
 
     data = [{'name': '紧固件', 'id': '紧固件', 'children': res['紧固件']}, {'name': '轴承', 'id': '轴承', 'children': res['轴承']},
             {'name': '联轴器', 'id': '联轴器', 'children': res['联轴器']}, {'name': '弹簧', 'id': '弹簧', 'children': res['弹簧']},
@@ -174,6 +203,9 @@ def get_tree():
 def get_pro_list(id, page, limit, key):
     """
     获取标准列表
+    :param key: 搜索关键字
+    :param page: 第几页
+    :param limit: 一页多少内容
     :param id: 标准大类名称
     :return:
     """
