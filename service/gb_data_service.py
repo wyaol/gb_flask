@@ -1,5 +1,6 @@
-import xlrd
 import os
+import datetime
+import xlrd
 from utils.common_utils import dict_add
 
 
@@ -67,6 +68,7 @@ def _get_table_struct(path, head_line=None):
     for i in range(col_num):
         for j in range(row_num):
             value = table.cell(j, i).value
+            if type(value) is str and len(value) > 0 and value[0] == '注': continue
             count = len(str(value)) // 2 if type(value) is float else len(value)
             col_word_count_max[i] = col_word_count_max[i] if count < col_word_count_max[i] else count
 
@@ -80,9 +82,9 @@ def _get_table_struct(path, head_line=None):
             value = table.cell(i, j).value
             if value == '':
                 continue
-            item = {'title': value}
 
-            item['width'] = __get_width(col_word_count_max[j])
+            item = {'title': value, 'width': __get_width(col_word_count_max[j])}
+
             # 便利以自身为左上角起点的矩形区域占几个单元格
             for ii in range(i + 1, row_num):
                 if table.cell(ii, j).value == '' and (ii, j) not in history:
@@ -117,7 +119,13 @@ def _get_table_data(path, head_line):
     for i in range(head_line, row_num):
         row = []
         for j in range(col_num):
-            row.append(table.cell(i, j).value)
+            value = table.cell(i, j).value
+            cell_type = table.cell(i, j).ctype
+            if cell_type == 3:
+                year, month, day, hour, minute, second = xlrd.xldate_as_tuple(value, data.datemode)
+                py_date = datetime.datetime(year, month, day)
+                value = py_date.strftime("%Y-%m-%d")
+            row.append(value)
         res.append(row)
     return res
 
