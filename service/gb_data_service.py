@@ -1,4 +1,5 @@
 import os
+import re
 import datetime
 import xlrd
 from utils.common_utils import dict_add, sort_by_dict
@@ -178,20 +179,6 @@ def get_tree():
         '组合件和连接副': 10,
         '焊钉': 11,
     }, 'name')
-    # sort_by_dict(res['紧固件'], {
-    #     '螺栓': 0,
-    #     '螺柱': 1,
-    #     '螺母': 2,
-    #     '螺钉': 3,
-    #     '木螺钉': 4,
-    #     '自攻螺钉': 5,
-    #     '垫圈': 6,
-    #     '销': 7,
-    #     '铆钉': 8,
-    #     '挡圈': 9,
-    #     '紧固件-组合件和连接副': 10,
-    #     '焊钉': 11,
-    # }, 'name')
 
     data = [{'name': '紧固件', 'id': '紧固件', 'children': res['紧固件']}, {'name': '轴承', 'id': '轴承', 'children': res['轴承']},
             {'name': '联轴器', 'id': '联轴器', 'children': res['联轴器']}, {'name': '弹簧', 'id': '弹簧', 'children': res['弹簧']},
@@ -210,7 +197,7 @@ def get_pro_list(id, page, limit, key):
     :return:
     """
     if key is None:
-        if  '/' in id:
+        if '/' in id:
             res = _get_pro_list_by_id(id)
         else:
             res = _get_pro_list_by_p_id(id)
@@ -219,10 +206,20 @@ def get_pro_list(id, page, limit, key):
             res = _get_pro_list_by_key_id(key, id)
         else:
             res = _get_pro_list_by_key_p_id(key, id)
+    # print([_value_opr(item['name']) for item in res])
+    res.sort(key=lambda x: _value_opr(x['name']))
+    # print([_value_opr(item['name']) for item in res])
     count = len(res)
     cur = (page - 1) * limit
     res = res[cur: (cur + limit)]
     return res, count
+
+
+def _value_opr(value):
+    match_obj = re.match(r'GBT.*?(\d+\.?\d?).*', value)
+    if match_obj:
+        return float(match_obj.group(1))
+    return value
 
 
 def _get_pro_list_by_p_id(id):
@@ -231,7 +228,7 @@ def _get_pro_list_by_p_id(id):
     dirs = os.listdir(dir_parent)
 
     for p_dir in dirs:
-        c_dis = os.listdir('中机数据/%s/%s' % (id, p_dir) )
+        c_dis = os.listdir('中机数据/%s/%s' % (id, p_dir))
         for dir in c_dis:
             res.append({
                 'name': dir,
