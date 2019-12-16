@@ -216,7 +216,7 @@ def get_pro_list(id, page, limit, key):
 
 
 def _value_opr(value):
-    match_obj = re.match(r'GBT.*?(\d+\.?\d?).*', value)
+    match_obj = re.match(r'[G|J]BT.*?(\d+\.?\d?).*', value)
     if match_obj:
         return float(match_obj.group(1))
     return value
