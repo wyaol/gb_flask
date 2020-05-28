@@ -181,8 +181,10 @@ def get_tree():
     }, 'name')
 
     data = [{'name': '紧固件', 'id': '紧固件', 'children': res['紧固件']}, {'name': '轴承', 'id': '轴承', 'children': res['轴承']},
-            {'name': '联轴器', 'id': '联轴器', 'children': res['联轴器']}, {'name': '弹簧', 'id': '弹簧', 'children': res['弹簧']},
-            {'name': '齿轮', 'id': '齿轮', 'children': []}, {'name': '液压件', 'id': '液压件', 'children': []}, ]
+            {'name': '联轴器', 'id': '联轴器', 'children': res['联轴器']},
+            # {'name': '弹簧', 'id': '弹簧', 'children': res['弹簧']},
+            # {'name': '齿轮', 'id': '齿轮', 'children': []}, {'name': '液压件', 'id': '液压件', 'children': []},
+            ]
 
     return data
 
