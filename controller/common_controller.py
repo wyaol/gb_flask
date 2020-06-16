@@ -59,19 +59,19 @@ def get_pro_list():
         'msg': '',
         'data': []
     }
-    try:
-        args = request.form.to_dict()
-        id = args.get('id', None)
-        page = args.get('page', None)
-        limit = args.get('limit', None)
-        key = args.get('key', None)
-        data, count = gb_data_service.get_pro_list(id, int(page), int(limit), key)
-        response['data'] = data
-        response['count'] = count
-    except KeyError:
-        pass
-    finally:
-        return json.dumps(response, ensure_ascii=True)
+    # try:
+    args = request.form.to_dict()
+    ids = request.values.getlist('id[]')
+    page = args.get('page', None)
+    limit = args.get('limit', None)
+    key = args.get('key', None)
+    data, count = gb_data_service.get_pro_list(ids, int(page), int(limit), key)
+    response['data'] = data
+    response['count'] = count
+# except KeyError:
+#     pass
+# finally:
+    return json.dumps(response, ensure_ascii=True)
 
 
 @common.route('/pro/technology_quote', methods=['POST'])

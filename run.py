@@ -8,36 +8,25 @@ app.register_blueprint(example_controller.example)
 app.register_blueprint(common_controller.common)
 
 
-@app.route("/中机数据/<category>/<obj>/<name>/<img_name>")
-def index(category, obj, name, img_name):
-    if 'stl' in img_name:
-        return send_file('中机数据/%s/%s/%s/%s' % (category, obj, name, img_name))
-    elif 'xlsx' in img_name:
-        path = '中机数据/%s/%s/%s/%s' % (category, obj, name, img_name)
-        with open(path, 'rb') as f:
-            excel = f.read()
-        # resp = Response(excel, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        #     headers={
-        #         'Access-Control-Allow-Origin': '*',
-        #         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
-        #     }
-        # )
-        res = make_response(excel)
-        res.headers['Access-Control-Allow-Origin'] = '*'
-        res.headers['Access-Control-Allow-Method'] = 'GET, POST, OPTIONS'
-        res.headers['Access-Control-Allow-Headers'] = '*'
-        res.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        return res
-    else:
-        img_path1 = '中机数据/%s/%s/%s/%s.jpg' % (category, obj, name, img_name)
-        img_path2 = '中机数据/%s/%s/%s/%s.png' % (category, obj, name, img_name)
-        if os.path.exists(img_path1) is False and os.path.exists(img_path2) is False: return ''
-        elif os.path.exists(img_path1) is True:img_path = img_path1
-        else: img_path = img_path2
-        with open(img_path, 'rb') as f:
-            image = f.read()
-        resp = Response(image, mimetype="image/jpeg")
-        return resp
+@app.route('/中机数据/<path:path>')
+def get_dir(path):
+    return send_file(os.path.join('中机数据', path))
+
+
+# @app.route("/中机数据/<category>/<obj>/<name>/<img_name>")
+# def index(category, obj, name, img_name):
+#     if 'stl' in img_name:
+#         return send_file('中机数据/%s/%s/%s/%s' % (category, obj, name, img_name))
+#     else:
+#         img_path1 = '中机数据/%s/%s/%s/%s.jpg' % (category, obj, name, img_name)
+#         img_path2 = '中机数据/%s/%s/%s/%s.png' % (category, obj, name, img_name)
+#         if os.path.exists(img_path1) is False and os.path.exists(img_path2) is False: return ''
+#         elif os.path.exists(img_path1) is True:img_path = img_path1
+#         else: img_path = img_path2
+#         with open(img_path, 'rb') as f:
+#             image = f.read()
+#         resp = Response(image, mimetype="image/jpeg")
+#         return resp
 
 
 if __name__ == '__main__':

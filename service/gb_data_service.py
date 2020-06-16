@@ -156,6 +156,35 @@ def get_size_weight_table_cont(path, limit, page):
 
 
 def get_tree():
+    return _get_tree('中机数据', [])
+
+
+def _get_tree(dir, dirs):
+    try:
+        res = []
+        p_dirs = os.listdir(dir)
+        for dir_n in p_dirs:
+            new_dirs = dirs.copy()
+            new_dirs.append(dir_n)
+            new_dir = os.path.join(dir, dir_n)
+            dirss = os.listdir(new_dir)
+            if len(dirss) != 0:
+                new_dir_dir = os.path.join(new_dir, dirss[0])
+                os.listdir(new_dir_dir)
+            ress = {
+                'name': dir_n,
+                'id': new_dirs
+            }
+            result = _get_tree(new_dir, new_dirs)
+            if result is not None:
+                ress['children'] = result
+            res.append(ress)
+        return res
+    except NotADirectoryError:
+        return None
+
+
+def get_tree2():
     # fasteners = []
     res = {}
     p_dirs = os.listdir('中机数据/')
@@ -196,103 +225,63 @@ def get_tree():
     return data
 
 
-def get_pro_list(id, page, limit, key):
+def get_pro_list(path, page, limit, key):
     """
-    获取标准列表
-    :param key: 搜索关键字
-    :param page: 第几页
-    :param limit: 一页多少内容
-    :param id: 标准大类名称
+    获取零件列表
+    :param path: 路径列表
+    :param page:
+    :param limit:
+    :param key:
     :return:
     """
-    if key is None:
-        if '/' in id:
-            res = _get_pro_list_by_id(id)
-        else:
-            res = _get_pro_list_by_p_id(id)
-    else:
-        if '/' in id:
-            res = _get_pro_list_by_key_id(key, id)
-        else:
-            res = _get_pro_list_by_key_p_id(key, id)
-    # print([_value_opr(item['name']) for item in res])
+    new_path = ['中机数据']
+    new_path.extend(path)
+    res = get_products(new_path, key)
+
     res.sort(key=lambda x: _value_opr(x['name']))
-    # print([_value_opr(item['name']) for item in res])
     count = len(res)
     cur = (page - 1) * limit
     res = res[cur: (cur + limit)]
     return res, count
 
 
+def get_products(dirs, key):
+    res = []
+    _get_products(dirs, res, key)
+    return res
+
+
+def _get_products(dir_list, res, key):
+    dir = os.path.join(*dir_list)
+    dirs = os.listdir(dir)
+    if '3D.stl' in dirs or '2.jpg' in dirs or '2.png' in dirs:
+        if key is None:
+            res.append({
+                'name': dir_list[-1],
+                'thumb': '1.jpg',
+                'drawing': '2.jpg',
+                'path': dir_list
+            })
+        else:
+            if key in dir_list[-1]:
+                res.append({
+                    'name': dir_list[-1],
+                    'thumb': '1.jpg',
+                    'drawing': '2.jpg',
+                    'path': dir_list
+                })
+    else:
+        for dir_n in dirs:
+            new_dir_list = dir_list.copy()
+            new_dir_list.append(dir_n)
+            _get_products(new_dir_list, res, key)
+
+
 def _value_opr(value):
     match_obj = re.match(r'[G|J]BT.*?(\d+\.?\d?).*', value)
     if match_obj:
         return float(match_obj.group(1))
-    return value
-
-
-def _get_pro_list_by_p_id(id):
-    res = []
-    dir_parent = '中机数据/%s/' % id
-    dirs = os.listdir(dir_parent)
-
-    for p_dir in dirs:
-        c_dis = os.listdir('中机数据/%s/%s' % (id, p_dir))
-        for dir in c_dis:
-            res.append({
-                'name': dir,
-                'thumb': '1',
-                'drawing': '2',
-                'path': '%s%s/%s/' % (dir_parent, p_dir, dir)
-            })
-    return res
-
-
-def _get_pro_list_by_id(id):
-    res = []
-    dir_parent = '中机数据/%s/' % id
-    dirs = os.listdir(dir_parent)
-
-    for dir in dirs:
-        res.append({
-            'name': dir,
-            'thumb': '1',
-            'drawing': '2',
-            'path': '%s%s/' % (dir_parent, dir)
-        })
-    return res
-
-
-def _get_pro_list_by_key_id(key, id):
-    res = []
-    dir_parent = '中机数据'
-    dirs = os.listdir('%s/%s/' % (dir_parent, id))
-    for dir in dirs:
-        if key not in dir: continue
-        res.append({
-            'name': dir,
-            'thumb': '1',
-            'drawing': '2',
-            'path': '%s/%s/%s/' % (dir_parent, id, dir)
-        })
-    return res
-
-
-def _get_pro_list_by_key_p_id(key, id):
-    res = []
-    dir_parent = '中机数据'
-    dirs = os.listdir('%s/%s/' % (dir_parent, id))
-    for e in dirs:
-        c_dirs = os.listdir('%s/%s/%s' % (dir_parent, id, e))
-        for dir in c_dirs:
-            if key not in dir: continue
-            res.append({
-                'name': dir,
-                'thumb': '1',
-                'drawing': '2',
-                'path': '%s/%s/%s/%s/' % (dir_parent, id, e, dir)
-            })
-    return res
+    return 200000
 
 
 def get_technology_quote(path):
